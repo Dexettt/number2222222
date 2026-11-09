@@ -137,7 +137,8 @@ jobs:
           # 7. Перенаправляем приватный репозиторий в локальную папку внутри WORKSPACE
           sed -i '' 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE 2>/dev/null || sed -i 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE || true
           
-          # 8. Запускаем компиляцию с жестким глобальным отключением проверки типов unguarded-availability для ВСЕХ файлов проекта
+          # 8. Сбрасываем старый ошибочный кэш макросов и запускаем компиляцию с глобальным отключением проверки типов
+          bazel clean --expunge
           bazel build //Telegram:Telegram --define=disable_codesigning=true --features=-apple.codesign_adhoc --spawn_strategy=local --ios_minimum_os=18.4 --per_file_copt=".*@-Wno-error=unguarded-availability-new,-Wno-undef"
 
       - name: Manual IPA Package
