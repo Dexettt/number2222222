@@ -139,7 +139,8 @@ jobs:
           sed -i '' 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE 2>/dev/null || sed -i 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE || true
           
           # 8. Запускаем компиляцию напрямую через системный Bazel с жестким отключением подписей
-          bazel build //Telegram:Telegram --define=disable_codesigning=true --features=-apple.codesign_adhoc --spawn_strategy=local
+                    # 8. Запускаем компиляцию напрямую через системный Bazel с фиксом минимальной версии iOS
+          bazel build //Telegram:Telegram --define=disable_codesigning=true --features=-apple.codesign_adhoc --spawn_strategy=local --ios_minimum_os=18.4
       - name: Manual IPA Package
         run: |
           mkdir -p build
