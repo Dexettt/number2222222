@@ -137,10 +137,9 @@ jobs:
           # 7. Перенаправляем приватный репозиторий в локальную папку внутри WORKSPACE
           sed -i '' 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE 2>/dev/null || sed -i 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE || true
           
-          # 8. Запускаем компиляцию напрямую через системный Bazel с жестким отключением подписей и фиксом минимальной версии iOS
-                    # 8. Запускаем компиляцию напрямую через системный Bazel с фиксом версий и отключением строгих проверок типов Clang
-          bazel build //Telegram:Telegram --define=disable_codesigning=true --features=-apple.codesign_adhoc --spawn_strategy=local --ios_minimum_os=18.4 --copt=-Wno-error=unguarded-availability-new --copt=-Wno-undefor-error
-
+          # 8. Запускаем компиляцию напрямую через системный Bazel с фиксом версий и правильными флагами Clang
+          bazel build //Telegram:Telegram --define=disable_codesigning=true --features=-apple.codesign_adhoc --spawn_strategy=local --ios_minimum_os=18.4 --copt=-Wno-error=unguarded-availability-new --copt=-Wno-undef
+          
       - name: Manual IPA Package
         run: |
           mkdir -p build
