@@ -51,7 +51,7 @@ jobs:
           mkdir -p build-input/configuration-repository/provisioning
           
           # Кроссплатформенный список расширений и их суффиксов (работает на любом macOS)
-          for item in "Telegram:" "NotificationService:.NotificationService" "NotificationContent:.NotificationContent" "Share:.Share" "Siri:.Siri" "Widget:.Widget" "Intents:.Intents" "Watch:.Watch" "WatchExtension:.WatchExtension" "BroadcastUpload:.BroadcastUpload" "VoIPCipher:.VoIPCipher"; do
+            for item in "Telegram:" "NotificationService:.NotificationService" "NotificationContent:.NotificationContent" "Share:.Share" "Siri:.Siri" "Widget:.Widget" "Intents:.SiriIntents" "Watch:.Watch" "WatchExtension:.WatchExtension" "BroadcastUpload:.BroadcastUpload" "VoIPCipher:.VoIPCipher"; do
             name="${item%%:*}"
             suffix="${item#*:}"
             
