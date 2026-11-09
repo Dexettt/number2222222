@@ -17,7 +17,7 @@ jobs:
           cat << 'EOF' > build-system/ghostgram-configuration.json
           {
             "api_id": "38691440",
-            "api_hash": "${{ 2084b84829640edd4183b40b6deab681 }}",
+            "api_hash": "${{ secrets.MY_API_HASH }}",
             "bundle_id": "org.telegram.Telegram",
             "team_id": "1234567890",
             "app_center_id": "none",
