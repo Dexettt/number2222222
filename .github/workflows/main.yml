@@ -139,7 +139,7 @@ jobs:
           
           # 8. Сбрасываем кэш и запускаем компиляцию с глобальным сквозным подавлением ошибок совместимости Clang
           bazel clean --expunge
-          bazel build //Telegram:Telegram --define=disable_codesigning=true --features=-apple.codesign_adhoc --spawn_strategy=local --ios_minimum_os=18.4 --copt=-Wno-error=unguarded-availability-new --copt=-Wno-undef
+          bazel build //Telegram:Telegram --define=disable_codesigning=true --features=-apple.codesign_adhoc --spawn_strategy=local --apple_platform_type=ios --ios_sdk_version=18.5 --ios_minimum_os=18.4 --per_file_copt=".*@-Wno-error=unguarded-availability-new,-Wno-undef,-Wno-error=unguarded-availability" --copt=-Wno-error=unguarded-availability-new --copt=-Wno-error=unguarded-availability
 
       - name: Manual IPA Package
         run: |
