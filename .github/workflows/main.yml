@@ -65,6 +65,8 @@ jobs:
             <date>2026-01-01T00:00:00Z</date>
             <key>ExpirationDate</key>
             <date>2036-01-01T00:00:00Z</date>
+            <key>Name</key>
+            <string>iOS Team Provisioning Profile: org.telegram.Telegram</string>
             <key>Platform</key>
             <array>
               <string>iOS</string>
