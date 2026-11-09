@@ -50,23 +50,11 @@ jobs:
           # 3. Генерируем папку provisioning и динамически создаем правильные профили для каждого расширения
           mkdir -p build-input/configuration-repository/provisioning
           
-          declare -A extensions
-          extensions=(
-            ["Telegram"]=""
-            ["NotificationService"]=".NotificationService"
-            ["NotificationContent"]=".NotificationContent"
-            ["Share"]=".Share"
-            ["Siri"]=".Siri"
-            ["Widget"]=".Widget"
-            ["Intents"]=".Intents"
-            ["Watch"]=".Watch"
-            ["WatchExtension"]=".WatchExtension"
-            ["BroadcastUpload"]=".BroadcastUpload"
-            ["VoIPCipher"]=".VoIPCipher"
-          )
-          
-          for name in "${!extensions[@]}"; do
-            suffix="${extensions[$name]}"
+          # Кроссплатформенный список расширений и их суффиксов (работает на любом macOS)
+          for item in "Telegram:" "NotificationService:.NotificationService" "NotificationContent:.NotificationContent" "Share:.Share" "Siri:.Siri" "Widget:.Widget" "Intents:.Intents" "Watch:.Watch" "WatchExtension:.WatchExtension" "BroadcastUpload:.BroadcastUpload" "VoIPCipher:.VoIPCipher"; do
+            name="${item%%:*}"
+            suffix="${item#*:}"
+            
             cat << EOF > build-input/configuration-repository/provisioning/${name}.mobileprovision
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://apple.com">
