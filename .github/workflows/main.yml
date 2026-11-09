@@ -47,16 +47,33 @@ jobs:
           touch build-input/configuration-repository/WORKSPACE
           touch build-input/configuration-repository/BUILD.bazel
           
-          # 3. Генерируем папку provisioning и создаем там валидные XML-профили для всех расширений
+          # 3. Генерируем папку provisioning и динамически создаем правильные профили для каждого расширения
           mkdir -p build-input/configuration-repository/provisioning
           
-          cat << 'EOF' > build-input/configuration-repository/provisioning/template.plist
+          declare -A extensions
+          extensions=(
+            ["Telegram"]=""
+            ["NotificationService"]=".NotificationService"
+            ["NotificationContent"]=".NotificationContent"
+            ["Share"]=".Share"
+            ["Siri"]=".Siri"
+            ["Widget"]=".Widget"
+            ["Intents"]=".Intents"
+            ["Watch"]=".Watch"
+            ["WatchExtension"]=".WatchExtension"
+            ["BroadcastUpload"]=".BroadcastUpload"
+            ["VoIPCipher"]=".VoIPCipher"
+          )
+          
+          for name in "${!extensions[@]}"; do
+            suffix="${extensions[$name]}"
+            cat << EOF > build-input/configuration-repository/provisioning/${name}.mobileprovision
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://apple.com">
           <plist version="1.0">
           <dict>
             <key>AppIDName</key>
-            <string>Telegram</string>
+            <string>Telegram${name}</string>
             <key>ApplicationIdentifierPrefix</key>
             <array>
               <string>1234567890</string>
@@ -66,7 +83,7 @@ jobs:
             <key>ExpirationDate</key>
             <date>2036-01-01T00:00:00Z</date>
             <key>Name</key>
-            <string>iOS Team Provisioning Profile: org.telegram.Telegram</string>
+            <string>iOS Team Provisioning Profile: org.telegram.Telegram${suffix}</string>
             <key>Platform</key>
             <array>
               <string>iOS</string>
@@ -80,7 +97,7 @@ jobs:
               <key>com.apple.developer.team-identifier</key>
               <string>1234567890</string>
               <key>application-identifier</key>
-              <string>1234567890.org.telegram.Telegram</string>
+              <string>1234567890.org.telegram.Telegram${suffix}</string>
               <key>com.apple.security.application-groups</key>
               <array>
                 <string>group.org.telegram.Telegram</string>
@@ -101,16 +118,14 @@ jobs:
           </dict>
           </plist>
           EOF
-          
-          for name in Telegram NotificationService NotificationContent Share Siri Widget Intents Watch WatchExtension BroadcastUpload VoIPCipher; do
-            cp build-input/configuration-repository/provisioning/template.plist build-input/configuration-repository/provisioning/${name}.mobileprovision
           done
           
+          # 4. Объявляем их экспорт в BUILD файле
           cat << 'EOF' > build-input/configuration-repository/provisioning/BUILD
           exports_files(glob(["*"]))
           EOF
           
-          # 4. Записываем ПОЛНЫЙ НАБОР обязательных переменных конфигурации Telegram
+          # 5. Записываем ПОЛНЫЙ НАБОР обязательных переменных конфигурации Telegram
           cat << 'EOF' > build-input/configuration-repository/variables.bzl
           telegram_bazel_path = "/opt/homebrew/bin/bazel"
           telegram_use_xcode_managed_codesigning = False
@@ -129,15 +144,14 @@ jobs:
           telegram_enable_icloud = False
           EOF
           
-          # 5. Записываем официальное имя модуля внутрь MODULE.bazel
+          # 6. Записываем официальное имя модуля внутрь MODULE.bazel
           echo 'module(name = "build_configuration")' > build-input/configuration-repository/MODULE.bazel
           
-          # 6. Перенаправляем приватный репозиторий в локальную папку внутри WORKSPACE
+          # 7. Перенаправляем приватный репозиторий в локальную папку внутри WORKSPACE
           sed -i '' 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE 2>/dev/null || sed -i 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE || true
           
-          # 7. Запускаем компиляцию напрямую через системный Bazel с жестким отключением подписей
+          # 8. Запускаем компиляцию напрямую через системный Bazel с жестким отключением подписей
           bazel build //Telegram:Telegram --define=disable_codesigning=true --features=-apple.codesign_adhoc --spawn_strategy=local
-
       - name: Manual IPA Package
         run: |
           mkdir -p build
