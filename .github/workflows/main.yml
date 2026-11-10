@@ -38,8 +38,11 @@ jobs:
 
       - name: Build IPA via Pure Bazel
         run: |
-          # 1. Отключаем несовместимый с iOS 18.5 скрытый код эффектов скролла авторов форка
-          sed -i '' 's/.*EdgeEffect.*/\/\/ Стерто для совместимости с iOS 18.5/g' submodules/UIKitRuntimeUtils/Source/UIKitRuntimeUtils/UIViewController+Navigation.m 2>/dev/null || true
+          # 1. Полностью очищаем несовместимый файл интерфейса авторов форка, чтобы скобки не ломали C++
+          cat << 'EOF' > submodules/UIKitRuntimeUtils/Source/UIKitRuntimeUtils/UIViewController+Navigation.m
+          #import <UIKit/UIKit.h>
+          void ggHideSystemEdgeEffect(UIScrollView *scrollView) {}
+          EOF
           
           # 2. Вручную создаем структуру папок, которую ищет Bazel
           mkdir -p build-input/configuration-repository
@@ -147,6 +150,8 @@ jobs:
           
           # 8. Запускаем компиляцию с флагом модульного переопределения
           bazel build //Telegram:Telegram --define=disable_codesigning=true --spawn_strategy=local --apple_platform_type=ios --ios_sdk_version=18.5 --ios_minimum_os=18.4 --copt=-Wno-error=unguarded-availability-new --copt=-Wno-error=unguarded-availability --override_module=build_configuration=$PWD/build-input/configuration-repository
+
+
 
       - name: Manual IPA Package
         run: |
