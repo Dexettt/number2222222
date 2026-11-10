@@ -112,23 +112,23 @@ jobs:
           exports_files(glob(["*"]))
           EOF
           
-          # 5. Записываем ПОЛНЫЙ НАБОР обязательных переменных конфигурации (очищенный от слова none)
+          # 5. Записываем переменные конфигурации строго маленькими буквами в кавычках для совместимости с C++
           cat << 'EOF' > build-input/configuration-repository/variables.bzl
           telegram_bazel_path = "/opt/homebrew/bin/bazel"
-          telegram_use_xcode_managed_codesigning = False
+          telegram_use_xcode_managed_codesigning = "false"
           telegram_bundle_id = "org.telegram.Telegram"
           telegram_aps_environment = "production"
           telegram_api_id = "38691440"
           telegram_api_hash = "${{ secrets.MY_API_HASH }}"
           telegram_team_id = "1234567890"
           telegram_app_center_id = ""
-          telegram_is_internal_build = False
-          telegram_is_appstore_build = False
+          telegram_is_internal_build = "false"
+          telegram_is_appstore_build = "false"
           telegram_appstore_id = "0"
           telegram_app_specific_url_scheme = "tg"
           telegram_premium_iap_product_id = ""
-          telegram_enable_siri = False
-          telegram_enable_icloud = False
+          telegram_enable_siri = "false"
+          telegram_enable_icloud = "false"
           EOF
           
           # 6. Записываем официальное имя модуля внутрь MODULE.bazel
@@ -137,7 +137,7 @@ jobs:
           # 7. Перенаправляем приватный репозиторий в локальную папку внутри WORKSPACE
           sed -i '' 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE 2>/dev/null || sed -i 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE || true
           
-          # 8. Сбрасываем кэш и запускаем компиляцию с глобальным сквозным подавлением ошибок совместимости Clang
+          # 8. Сбрасываем кэш и запускаем компиляцию
           bazel clean --expunge
           bazel build //Telegram:Telegram --define=disable_codesigning=true --features=-apple.codesign_adhoc --spawn_strategy=local --apple_platform_type=ios --ios_sdk_version=18.5 --ios_minimum_os=18.4 --per_file_copt=".*@-Wno-error=unguarded-availability-new,-Wno-undef,-Wno-error=unguarded-availability" --copt=-Wno-error=unguarded-availability-new --copt=-Wno-error=unguarded-availability
 
