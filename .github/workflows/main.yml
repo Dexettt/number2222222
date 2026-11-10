@@ -36,7 +36,7 @@ jobs:
           brew install cmake ninja bazelisk
           pip3 install types-protobuf --break-system-packages
 
-            - name: Build IPA via Pure Bazel
+      - name: Build IPA via Pure Bazel
         run: |
           # 1. Отключаем несовместимый с iOS 18.5 скрытый код эффектов скролла авторов форка
           sed -i '' 's/.*EdgeEffect.*/\/\/ Стерто для совместимости с iOS 18.5/g' submodules/UIKitRuntimeUtils/Source/UIKitRuntimeUtils/UIViewController+Navigation.m 2>/dev/null || true
