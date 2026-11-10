@@ -149,7 +149,7 @@ jobs:
           sed -i '' 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE 2>/dev/null || sed -i 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE || true
           
           # 8. Запускаем компиляцию с флагом модульного переопределения
-          bazel build //Telegram:Telegram --define=disable_codesigning=true --spawn_strategy=local --apple_platform_type=ios --ios_sdk_version=18.5 --ios_minimum_os=18.4 --copt=-Wno-error=unguarded-availability-new --copt=-Wno-error=unguarded-availability --override_module=build_configuration=$PWD/build-input/configuration-repository --custom_package_extension=none
+          bazel build //Telegram:Telegram --define=disable_codesigning=true --spawn_strategy=local --apple_platform_type=ios --ios_sdk_version=18.5 --ios_minimum_os=18.4 --copt=-Wno-error=unguarded-availability-new --copt=-Wno-error=unguarded-availability --override_module=build_configuration=$PWD/build-input/configuration-repository --define=build_telegram_extensions=false
 
       - name: Manual IPA Package
         run: |
