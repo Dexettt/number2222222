@@ -38,91 +38,18 @@ jobs:
 
       - name: Build IPA via Pure Bazel
         run: |
-          # 1. Вручную отключаем несовместимый с iOS 18.5 скрытый код эффектов скролла авторов форка
+          # 1. Отключаем несовместимый с iOS 18.5 скрытый код эффектов скролла авторов форка
           sed -i '' 's/.*EdgeEffect.*/\/\/ Стерто для совместимости с iOS 18.5/g' submodules/UIKitRuntimeUtils/Source/UIKitRuntimeUtils/UIViewController+Navigation.m 2>/dev/null || true
           
-          # 2. Вручную создаем структуру папок, которую ищет Bazel
+          # 2. Создаем структуру папок, которую ищет Bazel
           mkdir -p build-input/configuration-repository
           cp build-system/ghostgram-configuration.json build-input/configuration-repository/ghostgram-configuration.json
           
-          # 3. Создаем пустые маркеры репозитория
           touch build-input/configuration-repository/REPO.bazel
           touch build-input/configuration-repository/WORKSPACE
           touch build-input/configuration-repository/BUILD.bazel
           
-          # 4. Генерируем папку provisioning и динамически создаем правильные профили для каждого расширения
-          mkdir -p build-input/configuration-repository/provisioning
-          
-          # Исправлено "Telegram:Telegram" вместо "Telegram:", чтобы убрать лишнюю точку в имени профиля
-          for item in "Telegram:Telegram" "NotificationService:.NotificationService" "NotificationContent:.NotificationContent" "Share:.Share" "Siri:.Siri" "Widget:.Widget" "Intents:.SiriIntents" "Watch:.Watch" "WatchExtension:.WatchExtension" "BroadcastUpload:.BroadcastUpload" "VoIPCipher:.VoIPCipher"; do
-            name="${item%%:*}"
-            suffix="${item#*:}"
-            
-            if [ "$name" = "Telegram" ]; then
-              full_bundle_id="org.telegram.Telegram"
-            else
-              full_bundle_id="org.telegram.Telegram${suffix}"
-            fi
-            
-            cat << EOF > build-input/configuration-repository/provisioning/${name}.mobileprovision
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://apple.com">
-          <plist version="1.0">
-          <dict>
-            <key>AppIDName</key>
-            <string>Telegram${name}</string>
-            <key>ApplicationIdentifierPrefix</key>
-            <array>
-              <string>1234567890</string>
-            </array>
-            <key>CreationDate</key>
-            <date>2026-01-01T00:00:00Z</date>
-            <key>ExpirationDate</key>
-            <date>2036-01-01T00:00:00Z</date>
-            <key>Name</key>
-            <string>iOS Team Provisioning Profile: ${full_bundle_id}</string>
-            <key>Platform</key>
-            <array>
-              <string>iOS</string>
-            </array>
-            <key>ProvisionsAllDevices</key>
-            <true/>
-            <key>Entitlements</key>
-            <dict>
-              <key>aps-environment</key>
-              <string>production</string>
-              <key>com.apple.developer.team-identifier</key>
-              <string>1234567890</string>
-              <key>application-identifier</key>
-              <string>1234567890.${full_bundle_id}</string>
-              <key>com.apple.security.application-groups</key>
-              <array>
-                <string>group.org.telegram.Telegram</string>
-              </array>
-            </dict>
-            <key>TeamIdentifier</key>
-            <array>
-              <string>1234567890</string>
-            </array>
-            <key>TeamName</key>
-            <string>Telegram Team</string>
-            <key>TimeToLive</key>
-            <integer>3650</integer>
-            <key>UUID</key>
-            <string>E621E1F8-C36C-495A-93FC-0C247A3E6E5F</string>
-            <key>Version</key>
-            <integer>1</integer>
-          </dict>
-          </plist>
-          EOF
-          done
-          
-          # 5. Объявляем их экспорт в BUILD файле
-          cat << 'EOF' > build-input/configuration-repository/provisioning/BUILD
-          exports_files(glob(["*"]))
-          EOF
-          
-          # 6. Записываем переменные конфигурации строго маленькими буквами в кавычках для совместимости с C++
+          # 3. Записываем переменные конфигурации строго маленькими буквами в кавычках для совместимости с C++
           cat << 'EOF' > build-input/configuration-repository/variables.bzl
           telegram_bazel_path = "/opt/homebrew/bin/bazel"
           telegram_use_xcode_managed_codesigning = "false"
@@ -141,19 +68,19 @@ jobs:
           telegram_enable_icloud = "false"
           EOF
           
-          # 7. Записываем официальное имя модуля внутрь MODULE.bazel
           echo 'module(name = "build_configuration")' > build-input/configuration-repository/MODULE.bazel
           
-          # 8. Перенаправляем приватный репозиторий в локальную папку внутри WORKSPACE
+          # 4. Перенаправляем приватный репозиторий в локальную папку внутри WORKSPACE
           sed -i '' 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE 2>/dev/null || sed -i 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE || true
           
-          # 9. Запускаем компиляцию (убран bazel clean для сохранения кэша кода с прошлого успешного шага)
-          bazel build //Telegram:Telegram --define=disable_codesigning=true --features=-apple.codesign_adhoc --spawn_strategy=local --apple_platform_type=ios --ios_sdk_version=18.5 --ios_minimum_os=18.4 --per_file_copt=".*@-Wno-error=unguarded-availability-new,-Wno-undef,-Wno-error=unguarded-availability" --copt=-Wno-error=unguarded-availability-new --copt=-Wno-error=unguarded-availability --define=apple.propagate_embedded_provisioning_profiles=true
+          # 5. Собираем только основное приложение без подписи Apple и без вызова поиска профилей
+          bazel build //Telegram:Telegram --define=disable_codesigning=true --spawn_strategy=local --apple_platform_type=ios --ios_sdk_version=18.5 --ios_minimum_os=18.4 --copt=-Wno-error=unguarded-availability-new --copt=-Wno-error=unguarded-availability
 
       - name: Manual IPA Package
         run: |
-          mkdir -p build
-          cp bazel-bin/Telegram/Telegram.ipa build/Telegram.ipa 2>/dev/null || cp bazel-bin/Telegram/Telegram_Action.ipa build/Telegram.ipa 2>/dev/null || true
+          mkdir -p build/Payload
+          cp -R bazel-bin/Telegram/Telegram.app build/Payload/ 2>/dev/null || cp -R bazel-bin/Telegram/Telegram_Action.app build/Payload/ 2>/dev/null || true
+          cd build && zip -r Telegram.ipa Payload
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
