@@ -112,7 +112,7 @@ jobs:
           exports_files(glob(["*"]))
           EOF
           
-          # 5. Записываем ПОЛНЫЙ НАБОР обязательных переменных конфигурации Telegram
+          # 5. Записываем ПОЛНЫЙ НАБОР обязательных переменных конфигурации (очищенный от слова none)
           cat << 'EOF' > build-input/configuration-repository/variables.bzl
           telegram_bazel_path = "/opt/homebrew/bin/bazel"
           telegram_use_xcode_managed_codesigning = False
@@ -121,12 +121,12 @@ jobs:
           telegram_api_id = "38691440"
           telegram_api_hash = "${{ secrets.MY_API_HASH }}"
           telegram_team_id = "1234567890"
-          telegram_app_center_id = "none"
+          telegram_app_center_id = ""
           telegram_is_internal_build = False
           telegram_is_appstore_build = False
-          telegram_appstore_id = "none"
+          telegram_appstore_id = "0"
           telegram_app_specific_url_scheme = "tg"
-          telegram_premium_iap_product_id = "none"
+          telegram_premium_iap_product_id = ""
           telegram_enable_siri = False
           telegram_enable_icloud = False
           EOF
