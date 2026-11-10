@@ -53,9 +53,16 @@ jobs:
           # 4. Генерируем папку provisioning и динамически создаем правильные профили для каждого расширения
           mkdir -p build-input/configuration-repository/provisioning
           
-          for item in "Telegram:" "NotificationService:.NotificationService" "NotificationContent:.NotificationContent" "Share:.Share" "Siri:.Siri" "Widget:.Widget" "Intents:.SiriIntents" "Watch:.Watch" "WatchExtension:.WatchExtension" "BroadcastUpload:.BroadcastUpload" "VoIPCipher:.VoIPCipher"; do
+          # Исправлено "Telegram:Telegram" вместо "Telegram:", чтобы убрать лишнюю точку в имени профиля
+          for item in "Telegram:Telegram" "NotificationService:.NotificationService" "NotificationContent:.NotificationContent" "Share:.Share" "Siri:.Siri" "Widget:.Widget" "Intents:.SiriIntents" "Watch:.Watch" "WatchExtension:.WatchExtension" "BroadcastUpload:.BroadcastUpload" "VoIPCipher:.VoIPCipher"; do
             name="${item%%:*}"
             suffix="${item#*:}"
+            
+            if [ "$name" = "Telegram" ]; then
+              full_bundle_id="org.telegram.Telegram"
+            else
+              full_bundle_id="org.telegram.Telegram${suffix}"
+            fi
             
             cat << EOF > build-input/configuration-repository/provisioning/${name}.mobileprovision
           <?xml version="1.0" encoding="UTF-8"?>
@@ -73,7 +80,7 @@ jobs:
             <key>ExpirationDate</key>
             <date>2036-01-01T00:00:00Z</date>
             <key>Name</key>
-            <string>iOS Team Provisioning Profile: org.telegram.Telegram${suffix}</string>
+            <string>iOS Team Provisioning Profile: ${full_bundle_id}</string>
             <key>Platform</key>
             <array>
               <string>iOS</string>
@@ -87,7 +94,7 @@ jobs:
               <key>com.apple.developer.team-identifier</key>
               <string>1234567890</string>
               <key>application-identifier</key>
-              <string>1234567890.org.telegram.Telegram${suffix}</string>
+              <string>1234567890.${full_bundle_id}</string>
               <key>com.apple.security.application-groups</key>
               <array>
                 <string>group.org.telegram.Telegram</string>
@@ -140,9 +147,8 @@ jobs:
           # 8. Перенаправляем приватный репозиторий в локальную папку внутри WORKSPACE
           sed -i '' 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE 2>/dev/null || sed -i 's/build_configuration/build_input\/configuration-repository/g' WORKSPACE || true
           
-          # 9. Сбрасываем кэш и запускаем компиляцию
-          bazel clean --expunge
-          bazel build //Telegram:Telegram --define=disable_codesigning=true --features=-apple.codesign_adhoc --spawn_strategy=local --apple_platform_type=ios --ios_sdk_version=18.5 --ios_minimum_os=18.4 --per_file_copt=".*@-Wno-error=unguarded-availability-new,-Wno-undef,-Wno-error=unguarded-availability" --copt=-Wno-error=unguarded-availability-new --copt=-Wno-error=unguarded-availability
+          # 9. Запускаем компиляцию (убран bazel clean для сохранения кэша кода с прошлого успешного шага)
+          bazel build //Telegram:Telegram --define=disable_codesigning=true --features=-apple.codesign_adhoc --spawn_strategy=local --apple_platform_type=ios --ios_sdk_version=18.5 --ios_minimum_os=18.4 --per_file_copt=".*@-Wno-error=unguarded-availability-new,-Wno-undef,-Wno-error=unguarded-availability" --copt=-Wno-error=unguarded-availability-new --copt=-Wno-error=unguarded-availability --define=apple.propagate_embedded_provisioning_profiles=true
 
       - name: Manual IPA Package
         run: |
